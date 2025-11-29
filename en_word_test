@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8" />
+    <title>單字記憶齒輪風 v0.4（會記住你的紀錄）</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top, #0f172a 0, #020617 55%);
+            color: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 22px;
+            padding: 24px 26px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 22px 60px rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+        }
+
+        .app-title {
+            font-size: 18px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #22c55e;
+            margin-bottom: 4px;
+        }
+
+        .app-subtitle {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+
+        .app-note {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+
+        .word-box {
+            background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), rgba(15, 23, 42, 0.95));
+            border-radius: 18px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+            border: 1px solid rgba(34, 197, 94, 0.35);
+        }
+
+        .word-en {
+            font-size: 26px;
+            font-weight: 650;
+            letter-spacing: 0.03em;
+            margin-bottom: 4px;
+        }
+
+        .word-tag {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            color: #9ca3af;
+            margin-bottom: 2px;
+        }
+
+        .word-zh {
+            font-size: 15px;
+            color: #e5e7eb;
+            margin-bottom: 4px;
+        }
+
+        .word-hint {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .progress {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .stats {
+            font-size: 12px;
+            color: #e5e7eb;
+            margin-top: 6px;
+        }
+
+        .stats span {
+            opacity: 0.85;
+        }
+
+        .gear-status {
+            margin-top: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .gear-desc {
+            margin-top: 4px;
+            font-size: 11px;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-main,
+        .btn-remember,
+        .btn-forget {
+            border: none;
+            border-radius: 999px;
+            padding: 9px 14px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            flex: 1;
+        }
+        .btn-reset {
+    border: 1px solid rgba(148, 163, 184, 0.6);
+    border-radius: 999px;
+    padding: 9px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 500;
+    flex: 1;
+    background: rgba(15, 23, 42, 0.9);
+    color: #e5e7eb;
+}
+
+        .btn-remember {
+            background: rgba(34, 197, 94, 0.16);
+            color: #bbf7d0;
+            border: 1px solid rgba(34, 197, 94, 0.6);
+        }
+
+        .btn-forget {
+            background: rgba(148, 163, 184, 0.16);
+            color: #e5e7eb;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+        }
+
+        .btn-main {
+            width: 100%;
+            margin-top: 10px;
+            background: #22c55e;
+            color: #022c22;
+        }
+
+        .btn-main:active,
+        .btn-remember:active,
+        .btn-forget:active {
+            transform: scale(0.98);
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="app-title">邱聿綺的英文練習</div>
+        <div class="app-subtitle">東海國小二年級囉</div>
+        <div class="app-note">（關掉這個網頁、下次回來，紀錄還會存在同一台電腦 / 同一瀏覽器裡）</div>
+
+        <div class="word-box">
+            <div class="word-tag" id="wordLevel"></div>
+            <div class="word-en" id="wordEn">loading...</div>
+            <div class="word-zh" id="wordZh"></div>
+            <div class="word-hint" id="wordHint"></div>
+
+            <div class="stats" id="wordStats"></div>
+            <div class="gear-status" id="gearStatus"></div>
+            <div class="gear-desc" id="gearDesc"></div>
+        </div>
+
+        <div class="progress" id="progressText"></div>
+
+        <div class="btn-row">
+    <button class="btn-remember" onclick="markRemember()">
+        我記得 👍
+    </button>
+    <button class="btn-forget" onclick="markForget()">
+        我忘了 😵
+    </button>
+</div>
+
+<div class="btn-row">
+    <button class="btn-reset" onclick="resetCurrent()">
+        重置這個單字紀錄 🔄
+    </button>
+</div>
+
+<button class="btn-main" onclick="nextWord()">
+    下一個單字 ▶
+</button>
+
+
+        <div class="hint">
+            所有的記憶紀錄只會存放在這台電腦、這個瀏覽器中。<br />
+            之後我們可以加入「重置紀錄」、「匯出單字」等功能。
+        </div>
+    </div>
+
+    <script>
+        // --- 單字資料庫 ---
+        const words = [
+            {
+                en: "planet",
+                zh: "行星；星球",
+                level: "Lv.1 - 基礎名詞",
+                hint: "Earth is a planet in the solar system."
+            },
+            {
+                en: "gear",
+                zh: "齒輪；裝備",
+                level: "Lv.1 - 關鍵字",
+                hint: "The bike’s gear makes it easier to ride uphill."
+            },
+            {
+                en: "memory",
+                zh: "記憶；回憶",
+                level: "Lv.1 - 抽象名詞",
+                hint: "This song brings back a happy memory."
+            },
+            {
+                en: "focus",
+                zh: "專注；集中",
+                level: "Lv.1 - 動詞 / 名詞",
+                hint: "Turn off your phone so you can focus on studying."
+            },
+            {
+                en: "routine",
+                zh: "例行公事；固定流程",
+                level: "Lv.1 - 生活用語",
+                hint: "Having a morning routine can make your day smoother."
+            },
+             {
+                en: "test",
+                zh: "測試；測驗",
+                level: "Lv.1 - 生活用語",
+                hint: "This is test 1."
+            },
+            {
+                en: "watermelon",
+                zh: "西瓜",
+                level: "Lv.1 - 生活用語",
+                hint: "I have a water melon"
+            }
+        ];
+
+        const STORAGE_KEY = "wordGearData_v1";
+
+        // --- 每個單字的記錄資料（記得/忘了 次數） ---
+        let stats = [];
+        let currentIndex = 0;
+
+        function createEmptyStats() {
+            return words.map(() => ({
+                remember: 0,
+                forget: 0
+            }));
+        }
+
+        // 從 localStorage 載入資料
+        function loadData() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+
+            if (!raw) {
+                // 沒有存過資料，給預設值
+                stats = createEmptyStats();
+                currentIndex = 0;
+                return;
+            }
+
+            try {
+                const data = JSON.parse(raw);
+
+                // 檢查 stats 是否有效，長度要跟 words 一樣
+                if (Array.isArray(data.stats) && data.stats.length === words.length) {
+                    stats = data.stats;
+                } else {
+                    stats = createEmptyStats();
+                }
+
+                // 檢查 currentIndex 是否合理
+                if (
+                    typeof data.currentIndex === "number" &&
+                    data.currentIndex >= 0 &&
+                    data.currentIndex < words.length
+                ) {
+                    currentIndex = data.currentIndex;
+                } else {
+                    currentIndex = 0;
+                }
+            } catch (e) {
+                // 若解析失敗，就退回預設值
+                console.error("讀取儲存資料時發生錯誤，使用預設值。", e);
+                stats = createEmptyStats();
+                currentIndex = 0;
+            }
+        }
+
+        // 把 stats + currentIndex 存回 localStorage
+        function saveData() {
+            const data = {
+                stats: stats,
+                currentIndex: currentIndex
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // 根據 stats 算出齒輪等級
+        function getGearStatus(stat) {
+            const score = stat.remember - stat.forget;
+
+            if (score >= 8) {
+                return {
+                    label: "🟢 綠色齒輪 · 熟練",
+                    desc: "這個單字目前相對穩定，可以降低出現頻率，偶爾回顧即可。",
+                    bg: "rgba(22, 163, 74, 0.25)",
+                    color: "#bbf7d0",
+                    border: "1px solid rgba(34, 197, 94, 0.9)"
+                };
+            } else if (score >= 2) {
+                return {
+                    label: "🟡 黃色齒輪 · 正在建立記憶",
+                    desc: "已有一定熟悉度，但還沒到非常穩。建議持續以正常頻率複習。",
+                    bg: "rgba(234, 179, 8, 0.22)",
+                    color: "#fef9c3",
+                    border: "1px solid rgba(234, 179, 8, 0.9)"
+                };
+            } else {
+                return {
+                    label: "🔴 紅色齒輪 · 高風險單字",
+                    desc: "這個單字容易忘記，建議提高出現頻率，當成優先補強對象。",
+                    bg: "rgba(239, 68, 68, 0.22)",
+                    color: "#fee2e2",
+                    border: "1px solid rgba(239, 68, 68, 0.9)"
+                };
+            }
+        }
+
+        function renderWord() {
+            const word = words[currentIndex];
+            const stat = stats[currentIndex];
+
+            document.getElementById("wordEn").textContent = word.en;
+            document.getElementById("wordZh").textContent = word.zh;
+            document.getElementById("wordLevel").textContent = word.level;
+            document.getElementById("wordHint").textContent = word.hint;
+
+            document.getElementById("progressText").textContent =
+                "進度：" + (currentIndex + 1) + " / " + words.length;
+
+            document.getElementById("wordStats").innerHTML =
+                "<span>這個單字：記得 " + stat.remember + " 次 · 忘了 " + stat.forget + " 次</span>";
+
+            const gear = getGearStatus(stat);
+            const gearStatusEl = document.getElementById("gearStatus");
+            const gearDescEl = document.getElementById("gearDesc");
+
+            gearStatusEl.textContent = gear.label;
+            gearStatusEl.style.background = gear.bg;
+            gearStatusEl.style.color = gear.color;
+            gearStatusEl.style.border = gear.border;
+
+            gearDescEl.textContent = gear.desc;
+        }
+
+        function nextWord() {
+            currentIndex = currentIndex + 1;
+
+            if (currentIndex >= words.length) {
+                currentIndex = 0; // 跑完一圈從頭開始
+            }
+
+            saveData(); // 位置改變也要存
+            renderWord();
+        }
+
+        function markRemember() {
+            stats[currentIndex].remember += 1;
+            saveData();  // 次數改變就存起來
+            renderWord();
+        }
+
+        function markForget() {
+            stats[currentIndex].forget += 1;
+            saveData();
+            renderWord();
+        }
+        function resetCurrent() {
+    stats[currentIndex].remember = 0;
+    stats[currentIndex].forget = 0;
+    saveData();   // 也一併更新到 localStorage
+    renderWord(); // 讓畫面上的次數 & 齒輪立刻刷新
+}
+
+
+        // 一進頁面：先載入資料，再畫出畫面
+        loadData();
+        renderWord();
+    </script>
+</body>
+</html>
+
